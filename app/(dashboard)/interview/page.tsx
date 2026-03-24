@@ -59,14 +59,41 @@ export default function InterviewPage() {
     const vapi = vapiRef.current as {
       start: (id: string, opts: Record<string, unknown>) => Promise<void>;
     };
-    await vapi.start(assistantId, {
-      variableValues: {
-        candidateName:
-          user?.first_name && user?.last_name
-            ? `${user.first_name} ${user.last_name}`
-            : user?.first_name || "Candidate",
-      },
-    });
+
+    try {
+      // 1. Fetch user limits & config
+      const { AuthService } = await import("@/lib/services/authService");
+      const { TokenStorage } = await import("@/lib/apiClient");
+      
+      let maxDurationSeconds = 60; // Default fallback
+      let endCallMessage = "";
+      
+      const token = TokenStorage.getAccessToken();
+      if (token) {
+        try {
+          const config = await AuthService.getUserConfig(token);
+          maxDurationSeconds = config.max_duration_seconds;
+          endCallMessage = config.end_call_message;
+        } catch (e) {
+          console.error("Failed to fetch user config:", e);
+        }
+      }
+
+      // 2. Start call
+      await vapi.start(assistantId, {
+        maxDurationSeconds,
+        variableValues: {
+          candidateName:
+            user?.first_name && user?.last_name
+              ? `${user.first_name} ${user.last_name}`
+              : user?.first_name || "Candidate",
+          endCallMessage,
+        },
+      });
+    } catch (err) {
+      console.error("Call start failed:", err);
+      setStatus("idle");
+    }
   };
 
   const stop = async () => {

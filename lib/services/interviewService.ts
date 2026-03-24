@@ -19,6 +19,8 @@ export interface InterviewSessionResponse {
   session_id?: string;
   questions: InterviewQuestion[];
   job_title?: string;
+  max_duration_seconds?: number;
+  end_call_message?: string;
 }
 
 /* ─── Interview Service ─── */

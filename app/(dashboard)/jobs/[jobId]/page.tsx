@@ -99,6 +99,7 @@ export default function JobDetailPage({
       const sessionId = (data as any).session_id || (data as any).id;
 
       await vapi.start(assistantId, {
+        maxDurationSeconds: (data as any).max_duration_seconds || 60,
         variableValues: {
           candidateName:
             user?.first_name && user?.last_name
@@ -112,6 +113,7 @@ export default function JobDetailPage({
           jobId,
           interviewType,
           questionCount: String(questionCount),
+          endCallMessage: (data as any).end_call_message,
         },
       });
     } catch (err: unknown) {

@@ -30,6 +30,11 @@ export interface RegisterResponse {
   message: string;
 }
 
+export interface UserConfig {
+  max_duration_seconds: number;
+  end_call_message: string;
+}
+
 /* ─── Auth Service ─── */
 
 import { API_CONFIG } from "../apiClient";
@@ -103,6 +108,18 @@ export const AuthService = {
     });
 
     if (!res.ok) throw new Error("Token refresh failed");
+    return res.json();
+  },
+
+  async getUserConfig(accessToken: string): Promise<UserConfig> {
+    const res = await fetch(`${BASE}/api/auth/config/`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!res.ok) throw new Error("Failed to fetch user config");
     return res.json();
   },
 };
