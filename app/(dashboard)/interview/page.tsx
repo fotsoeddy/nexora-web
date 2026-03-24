@@ -37,6 +37,7 @@ export default function InterviewPage() {
       });
       vapi.on("error", (e: any) => {
         console.error("Vapi error:", e);
+        console.error("Vapi error FULL:", e);
         setStatus("idle");
         setAiSpeaking(false);
       });
