@@ -240,6 +240,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               >
                 {user.email}
               </p>
+              {user.interview_limit_mins && (
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider opacity-90" style={{ color: "var(--success)" }}>
+                    Limit: {user.interview_limit_mins} mins
+                  </span>
+                </div>
+              )}
             </div>
             <button
               onClick={logout}

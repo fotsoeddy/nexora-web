@@ -10,6 +10,8 @@ export default function InterviewPage() {
   const vapiRef = useRef<unknown>(null);
   const [status, setStatus] = useState<CallStatus>("idle");
   const [aiSpeaking, setAiSpeaking] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const publicKey = process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY!;
   const assistantId = process.env.NEXT_PUBLIC_VAPI_INTAKE_ASSISTANT_ID!;
@@ -24,10 +26,14 @@ export default function InterviewPage() {
       vapi = new Vapi(publicKey);
       vapiRef.current = vapi;
 
-      vapi.on("call-start", () => setStatus("in-call"));
+      vapi.on("call-start", () => {
+        setStatus("in-call");
+      });
       vapi.on("call-end", () => {
         setStatus("idle");
         setAiSpeaking(false);
+        setTimeLeft(null);
+        if (timerRef.current) clearInterval(timerRef.current);
       });
       vapi.on("speech-start", (m: any) => {
         if (m?.role === "assistant") setAiSpeaking(true);
@@ -80,6 +86,11 @@ export default function InterviewPage() {
       }
 
       // 2. Start call
+      setTimeLeft(maxDurationSeconds);
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
+      }, 1000);
+
       await vapi.start(assistantId, {
         maxDurationSeconds,
         variableValues: {
@@ -93,11 +104,14 @@ export default function InterviewPage() {
     } catch (err) {
       console.error("Call start failed:", err);
       setStatus("idle");
+      if (timerRef.current) clearInterval(timerRef.current);
     }
   };
 
   const stop = async () => {
     try {
+      if (timerRef.current) clearInterval(timerRef.current);
+      setTimeLeft(null);
       const vapi = vapiRef.current as { stop: () => Promise<void> } | null;
       if (vapi) await vapi.stop();
     } catch {
@@ -166,6 +180,16 @@ export default function InterviewPage() {
                 ? "AI is speaking"
                 : "Listening to you"}
         </p>
+        
+        {timeLeft !== null && status === "in-call" && (
+          <div className="flex items-center justify-center mb-2">
+            <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold border border-primary/20 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")} remaining
+            </div>
+          </div>
+        )}
+
         <p className="text-xs mb-6" style={{ color: "var(--muted)" }}>
           {status === "idle"
             ? "Click the button below to start your interview"

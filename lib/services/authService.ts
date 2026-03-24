@@ -8,6 +8,7 @@ export interface User {
   last_name: string;
   is_email_verified: boolean;
   is_staff: boolean;
+  interview_limit_mins: number;
 }
 
 export interface LoginResponse {

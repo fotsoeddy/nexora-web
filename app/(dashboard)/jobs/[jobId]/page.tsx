@@ -32,6 +32,8 @@ export default function JobDetailPage({
     "behavioral" | "technical" | "mixed"
   >("mixed");
   const [questionCount, setQuestionCount] = useState(5);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const vapiRef = useRef<unknown>(null);
 
@@ -60,10 +62,16 @@ export default function JobDetailPage({
     const vapi = new Vapi(publicKey);
 
     vapi.on("call-start", () => setInterviewStatus("in-call"));
-    vapi.on("call-end", () => setInterviewStatus("idle"));
+    vapi.on("call-end", () => {
+      setInterviewStatus("idle");
+      setTimeLeft(null);
+      if (timerRef.current) clearInterval(timerRef.current);
+    });
     vapi.on("error", (e: unknown) => {
       console.error("Vapi error:", e);
       setInterviewStatus("idle");
+      setTimeLeft(null);
+      if (timerRef.current) clearInterval(timerRef.current);
     });
 
     vapiRef.current = vapi;
@@ -116,9 +124,18 @@ export default function JobDetailPage({
           endCallMessage: (data as any).end_call_message,
         },
       });
+
+      // Start Countdown
+      const maxSeconds = (data as any).max_duration_seconds || 60;
+      setTimeLeft(maxSeconds);
+      if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
+      }, 1000);
     } catch (err: unknown) {
       console.error(err);
       setInterviewStatus("idle");
+      if (timerRef.current) clearInterval(timerRef.current);
       alert(
         err instanceof Error
           ? err.message
@@ -129,6 +146,8 @@ export default function JobDetailPage({
 
   const stopInterview = async () => {
     try {
+      if (timerRef.current) clearInterval(timerRef.current);
+      setTimeLeft(null);
       const vapi = vapiRef.current as {
         stop: () => Promise<void>;
       } | null;
@@ -395,20 +414,30 @@ export default function JobDetailPage({
 
             {interviewStatus === "in-call" && (
               <div
-                className="mt-4 flex items-center gap-2 text-xs py-2 px-3 rounded-lg"
+                className="mt-4 flex flex-col gap-2 py-2 px-3 rounded-lg"
                 style={{
                   background: "rgba(52, 211, 153, 0.1)",
-                  color: "var(--success)",
                 }}
               >
-                <span
-                  className="w-2 h-2 rounded-full inline-block"
-                  style={{
-                    background: "var(--success)",
-                    animation: "pulseGlow 1.5s ease-in-out infinite",
-                  }}
-                />
-                Interview in progress…
+                <div className="flex items-center gap-2 text-xs" style={{ color: "var(--success)" }}>
+                  <span
+                    className="w-2 h-2 rounded-full inline-block"
+                    style={{
+                      background: "var(--success)",
+                      animation: "pulseGlow 1.5s ease-in-out infinite",
+                    }}
+                  />
+                  Interview in progress…
+                </div>
+                
+                {timeLeft !== null && (
+                  <div className="text-[10px] font-bold uppercase tracking-wider opacity-80 flex items-center gap-1" style={{ color: "var(--success)" }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")} remaining
+                  </div>
+                )}
               </div>
             )}
           </div>
