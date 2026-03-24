@@ -122,6 +122,7 @@ export default function JobDetailPage({
           interviewType,
           questionCount: String(questionCount),
           endCallMessage: (data as any).end_call_message,
+          userId: user?.id, // CRITICAL: Link session to user for time tracking
         },
       });
 

@@ -160,7 +160,9 @@ function InterviewContent() {
           interviewType,
           questionCount: count,
           sessionId: sessionId || "",
+          session_id: sessionId || "", // alias
           questionsJson: questionsJson || "",
+          questions_json: questionsJson || "", // alias
           endCallMessage,
           userId: user?.id, // CRITICAL: Link session to user for time tracking
         },
