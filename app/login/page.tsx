@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
+import Link from "next/link";
 
 function LoginForm() {
   const router = useRouter();
@@ -259,13 +260,13 @@ function LoginForm() {
           style={{ color: "var(--muted)" }}
         >
           Don&apos;t have an account?{" "}
-          <a
+          <Link
             href="/register"
             className="font-medium transition-colors hover:underline"
             style={{ color: "var(--primary)" }}
           >
             Create one
-          </a>
+          </Link>
         </p>
       </div>
     </div>
