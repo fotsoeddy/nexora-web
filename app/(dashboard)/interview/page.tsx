@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useMemo, Suspense } from "react";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useSearchParams } from "next/navigation";
-import { LuMic, LuMicOff, LuVolume2, LuVolumeX, LuX, LuPhoneCall, LuMoreHorizontal } from "react-icons/lu";
+import { LuMic, LuMicOff, LuVolume2, LuVolumeX, LuX, LuPhoneCall, LuEllipsis } from "react-icons/lu";
 
 type CallStatus = "idle" | "connecting" | "in-call";
 
@@ -56,15 +56,31 @@ function InterviewContent() {
       vapi = new Vapi(publicKey);
       vapiRef.current = vapi;
 
+      // Fetch initial config for time limits
+      const { AuthService } = await import("@/lib/services/authService");
+      const { TokenStorage } = await import("@/lib/apiClient");
+      const token = TokenStorage.getAccessToken();
+      if (token) {
+        AuthService.getUserConfig(token).then(config => {
+          if (config.max_duration_seconds) setTimeLeft(config.max_duration_seconds);
+        }).catch(err => console.error("Initial config fetch failed:", err));
+      }
+
       vapi.on("call-start", () => {
         setStatus("in-call");
       });
       vapi.on("call-end", () => {
         setStatus("idle");
         setAiSpeaking(false);
-        setTimeLeft(null);
         setVolume(0);
         if (timerRef.current) clearInterval(timerRef.current);
+        
+        // Refresh time left after call ends
+        if (token) {
+           AuthService.getUserConfig(token).then(config => {
+             if (config.max_duration_seconds) setTimeLeft(config.max_duration_seconds);
+           });
+        }
       });
       vapi.on("speech-start", (m: any) => {
         if (m?.role === "assistant") setAiSpeaking(true);
@@ -146,6 +162,7 @@ function InterviewContent() {
           sessionId: sessionId || "",
           questionsJson: questionsJson || "",
           endCallMessage,
+          userId: user?.id, // CRITICAL: Link session to user for time tracking
         },
       });
     } catch (err) {
@@ -250,7 +267,7 @@ function InterviewContent() {
             ) : (
               <div className="flex flex-col items-center">
                  <LuPhoneCall size={40} className="text-[var(--primary)] mb-4 opacity-50" />
-                 <LuMoreHorizontal size={24} className="text-[var(--muted)] animate-pulse" />
+                 <LuEllipsis size={24} className="text-[var(--muted)] animate-pulse" />
               </div>
             )}
           </div>
@@ -267,11 +284,20 @@ function InterviewContent() {
               <p className="text-sm text-[var(--muted)] mt-1">{interviewType.toUpperCase()} MODE • {difficulty.toUpperCase()} LEVEL</p>
             </div>
 
-            {status === "idle" && (
-              <div className="space-y-4">
-                <p className="text-xs text-[var(--muted)] leading-relaxed italic border-l-2 border-[var(--primary)] pl-3">
-                  Prepare to speak clearly into your microphone. The AI will guide you through the process.
-                </p>
+            {(status === "idle" || status === "connecting") && (
+              <>
+                <div className="bg-white/5 rounded-2xl p-4 mb-6 border border-white/10 flex items-center justify-between">
+                   <div className="flex flex-col">
+                      <span className="text-[10px] uppercase font-black text-[var(--muted)] mb-1">Total Balance</span>
+                      <span className="text-sm font-mono text-white">
+                        {timeLeft !== null ? `${Math.floor(timeLeft / 60)}m ${timeLeft % 60}s` : 'Calculating...'}
+                      </span>
+                   </div>
+                   <div className="w-10 h-10 rounded-full bg-[var(--primary)]/20 flex items-center justify-center">
+                      <LuVolume2 size={16} className="text-[var(--primary)]" />
+                   </div>
+                </div>
+
                 <button
                   onClick={start}
                   disabled={status === "connecting"}
@@ -279,7 +305,7 @@ function InterviewContent() {
                 >
                   {status === "connecting" ? "Initializing..." : "Establish Connection"}
                 </button>
-              </div>
+              </>
             )}
 
             {status === "in-call" && (
@@ -378,7 +404,7 @@ function InterviewContent() {
 
 export default function InterviewPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center h-screen bg-[#0A0A0B]"><LuMoreHorizontal className="text-white animate-pulse" size={48} /></div>}>
+    <Suspense fallback={<div className="flex items-center justify-center h-screen bg-[#0A0A0B]"><LuEllipsis className="text-white animate-pulse" size={48} /></div>}>
       <InterviewContent />
     </Suspense>
   );
