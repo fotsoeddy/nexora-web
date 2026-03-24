@@ -96,14 +96,19 @@ export default function JobDetailPage({
       const assistantId =
         process.env.NEXT_PUBLIC_VAPI_INTERVIEWER_ASSISTANT_ID!;
 
+      const sessionId = (data as any).session_id || (data as any).id;
+
       await vapi.start(assistantId, {
         variableValues: {
           candidateName:
             user?.first_name && user?.last_name
               ? `${user.first_name} ${user.last_name}`
               : user?.first_name || "Candidate",
-          sessionId: data.session_id,
+          sessionId,
+          session_id: sessionId, // alias
           questionsJson: JSON.stringify(data.questions),
+          questions_json: JSON.stringify(data.questions), // alias
+          jobTitle: job.title,
           jobId,
           interviewType,
           questionCount: String(questionCount),

@@ -15,7 +15,8 @@ export interface InterviewQuestion {
 }
 
 export interface InterviewSessionResponse {
-  session_id: string;
+  id: string;
+  session_id?: string;
   questions: InterviewQuestion[];
   job_title?: string;
 }
