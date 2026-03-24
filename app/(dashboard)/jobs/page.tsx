@@ -95,7 +95,7 @@ export default function JobsPage() {
 
       {/* Search */}
       <div className="mb-6">
-        <div className="relative max-w-md">
+        <div className="relative w-full md:max-w-md">
           <svg
             className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
             width="18"

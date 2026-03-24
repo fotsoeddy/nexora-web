@@ -87,13 +87,12 @@ export default function InterviewPage() {
       </p>
 
       <div
-        className="glass rounded-xl p-8 max-w-lg mx-auto text-center"
+        className="glass rounded-xl p-5 md:p-8 max-w-lg mx-auto text-center"
         style={{ borderRadius: "var(--radius-xl)" }}
       >
-        {/* Visual indicator */}
         <div className="flex items-center justify-center mb-6">
           <div
-            className="w-28 h-28 rounded-full flex items-center justify-center transition-all duration-500"
+            className="w-20 h-20 md:w-28 md:h-28 rounded-full flex items-center justify-center transition-all duration-500"
             style={{
               background:
                 status === "in-call"
@@ -112,8 +111,9 @@ export default function InterviewPage() {
             }}
           >
             <svg
-              width="40"
-              height="40"
+              width="32"
+              height="32"
+              className="md:w-10 md:h-10"
               viewBox="0 0 24 24"
               fill="none"
               stroke="white"

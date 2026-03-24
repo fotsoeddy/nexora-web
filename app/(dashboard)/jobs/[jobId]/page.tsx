@@ -184,7 +184,7 @@ export default function JobDetailPage({
         Back to jobs
       </button>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Header card */}
